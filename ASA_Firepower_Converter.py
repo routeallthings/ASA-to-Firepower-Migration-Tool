@@ -1,6 +1,14 @@
 #!/usr/bin/env python
-'''NOTES'''
-'''INSTALL CISCOCONFPARSE (pip install ciscoconfparse==1.2.38)'''
+'''
+
+---PREREQ---
+INSTALL CISCOCONFPARSE (pip install ciscoconfparse==1.2.38)
+
+---VERSION---
+VERSION 1.0
+Goal in next version is to add service objects/ports
+
+'''
 
 '''IMPORT MODULES'''
 import getpass
