@@ -1,4 +1,4 @@
-# ASA to Firepower FMC Converter
+# ASA to Firepower FMC Migration Tool
 
 The goal of this project was to create an easy to use script that will gather custom objects from an ASA configuration file and import them into Firepower Management Center via a REST API. 
 
