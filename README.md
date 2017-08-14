@@ -19,13 +19,17 @@ Just execute the script and answer the questions
 
 * [CiscoConfParse](http://www.pennington.net/py/ciscoconfparse/) - The cisco configuration parser used
 
+## Features
+- Migration of Network Objects
+- Migration of Network Object Groups*
+- Migration of Port Objects
+
+## *Caveats
+- Does not import network groups inside network groups
+
 ## Versioning
 
-Version 1.1
-Import of port objects
-
-Version 1.2 (Future)
-Import of port object groups
+Version 1.1 - (Added) Import of Port Objects
 
 ## Authors
 
