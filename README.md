@@ -31,7 +31,7 @@ Import of port object groups
 
 * **Matt Cross** - *Initial work* - [RouteAllThings](https://github.com/routeallthings)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/routeallthings/ASA-to-Firepower-Converter/contributors) who participated in this project.
 
 ## License
 
