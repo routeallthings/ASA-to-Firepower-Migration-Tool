@@ -1,12 +1,26 @@
 #!/usr/bin/env python
 '''
+---AUTHOR---
+Name: Matt Cross
+Email: routeallthings@gmail.com
 
 ---PREREQ---
 INSTALL CISCOCONFPARSE (pip install ciscoconfparse==1.2.38)
 
 ---VERSION---
-VERSION 1.0
-Goal in next version is to add service objects/ports
+VERSION 1.1
+Currently Implemented Features
+- Import of Network Objects
+- Import of Network Object Groups* (Except groups inside groups)
+- Import of Ports
+
+Features planned in the near future
+- Import of Port Groups
+- Auto update of script
+- Auto install of CISCOCONFPARSE if missing
+
+Fixed from 1.0
+- Import of network objects without description
 
 '''
 
@@ -26,25 +40,24 @@ import sys
 '''GLOBAL VARIABLES'''
 
 fullpath = raw_input ('Enter the filename of the ASA config: ')
-'''fullpath = os.path.normpath(fullpathinput)'''
 fmcpathfull = raw_input ('Enter the IP address of the destination FMC: ')
 fmcpath = "https://" + fmcpathfull
 fmcuser = raw_input ('Enter the username of the destination FMC: ')
 fmcpassword = getpass.getpass('Enter the password of the destination FMC: ')
-'''importnatq = raw_input ('Do you want to import NAT rules (Y/N): ')'''
-'''importaclq = raw_input ('Do you want to import ACL rules (Y/N): ')'''
 debugmode = raw_input ('Debug Mode? (Y/N): ') 
 
-'''TESTONLY
+'''NOT IMPLEMENTED'''
+'''importnatq = raw_input ('Do you want to import NAT rules (Y/N): ')'''
+'''importaclq = raw_input ('Do you want to import ACL rules (Y/N): ')'''
+
+'''TESTONLY'''
+'''
 fullpath = os.path.normpath("C:/TFTP-Root/asa.cfg")
 fmcpath = "https://192.168.45.45"
 fmcuser = "admin"
 fmcpassword = "Password1"
 debugmode = "y"
-keep'''
-
-fmctokenurl = "https://" + fmcpath + "/api/fmc_platform/v1/auth/generatetoken"
-
+'''
 
 '''##### BEGIN SCRIPT #####'''
 '''Print Variables in Debug'''
@@ -61,6 +74,7 @@ if debugmode == 'Y' or debugmode == 'y':
 '''	print "ImportACLq = " + importaclq '''
 
 '''Firepower MGMT Connect '''
+fmctokenurl = "https://" + fmcpath + "/api/fmc_platform/v1/auth/generatetoken"
 headers = {'Content-Type': 'application/json'}
 fmc_api_auth_path = "/api/fmc_platform/v1/auth/generatetoken"
 fmc_auth_url = fmcpath + fmc_api_auth_path
@@ -90,14 +104,19 @@ if (fmcrangesobjecturl[-1] == '/'):
 fmcnetobjectgroupurl = fmcpath + "/api/fmc_config/v1/domain/default/object/networkgroups"
 if (fmcnetobjectgroupurl[-1] == '/'):
     fmcnetobjectgroupurl = fmcnetobjectgroupurl[:-1]
+fmcportobjecturl = fmcpath + "/api/fmc_config/v1/domain/default/object/protocolportobjects"
+if (fmcportobjecturl[-1] == '/'):
+    fmcportobjecturl = fmcportobjecturl[:-1]
 
-''' Actual Scripts '''
+''' Loading Network Objects and Groups '''
 asaconfig = CiscoConfParse(fullpath)
 objectnetwork = asaconfig.find_objects(r"^object network")
 objectnetworkgroup = asaconfig.find_objects(r"^object-group network")
 objectservice = asaconfig.find_objects(r"^object service")
 objectservicegroup = asaconfig.find_objects(r"^object-group service")
 objectprotocolgroup = asaconfig.find_objects(r"^object-group protocol")
+
+
 ''' Object Network '''
 for specificobjectnetwork in objectnetwork:
 	objectnetwork_before = specificobjectnetwork.text
@@ -116,6 +135,8 @@ for specificobjectnetwork in objectnetwork:
 			objectnetworkip = objectnetworkip_network + "/" + str(objectnetworkip_cidr)
 		if "description" in objectnetworkchild_before:
 			objectnetworkdescription = objectnetworkchild_before.strip("description ")
+		if not "description" in objectnetworkchild_before:
+			objectnetworkdescription = "Imported Object"
 	fmcpostdata = {
 		"name" : objectnetworkname,
 		"description" : objectnetworkdescription,
@@ -143,7 +164,7 @@ for specificobjectnetwork in objectnetwork:
 		print "Object Network IP " + objectnetworkip
 		print "Object Network Description " + objectnetworkdescription
 		print " "
-''' Object Network Group '''
+'''Object Network Group '''
 
 '''Get list of existing objects'''
 try:
@@ -327,4 +348,67 @@ for specificobjectnetworkgroup in objectnetworkgroup:
 		print "Object Network Group Name " + objectnetworkgroupname
 		print " "
 		print "Object Network Group POST " + fmcpostdata
+		print " "
+
+''' Object service '''
+for specificobjectservice in objectservice:
+	objectservice_before = specificobjectservice.text
+	objectservicename = objectservice_before.strip("object service ")
+	for objectservicechild in specificobjectservice.children:
+		objectservicechild_before = objectservicechild.text
+		objectservicechild_b1 = objectservicechild_before.strip("service ")
+		objectservicechild_protocol = objectservicechild_b1.split(" ")[:1][0]
+		if re.match(r"\d+",objectservicechild_protocol) :
+			print " "
+			print "Import custom service object manually as API doesnt support this function"
+			print "Object name is " + objectservicename
+			print " "
+		else :
+			objectservicechild_singleport = None
+			objectservicechild_firstport = None
+			objectservicechild_lastport = None
+			objectservicechild_direction = objectservicechild_b1.split(" ")[1:][0]
+			objectservicechild_amountofport = objectservicechild_b1.split(" ")[2:][0]
+			if objectservicechild_amountofport in ["eq"]:
+				objectservicechild_singleport = objectservicechild_b1.split(" ")[3:][0]
+			if objectservicechild_amountofport in ["range"]:
+				objectservicechild_firstport = objectservicechild_b1.split(" ")[3:][0]
+				objectservicechild_lastport = objectservicechild_b1.split(" ")[4:][0]
+			if not objectservicechild_singleport == None:
+					objectservicechild_port = objectservicechild_singleport
+			if not objectservicechild_firstport == None:
+					objectservicechild_port = objectservicechild_firstport + "-" + objectservicechild_lastport
+			if "description" in objectservicechild_before:
+				objectservicedescription = objectservicechild_before.strip("description ")
+			if not "description" in objectservicechild_before:
+				objectservicedescription = "Imported Object"
+			fmcpostdata = {
+				"name" : objectservicename,
+				"description" : objectservicedescription,
+				"port" : objectservicechild_port,
+				"protocol" : objectservicechild_protocol,
+				"type" : "ProtocolPortObject"
+			}
+	try:
+		r = requests.post(fmcportobjecturl, data=json.dumps(fmcpostdata), headers=headers, verify=False);
+		status_code = r.status_code
+		resp = r.text
+		if status_code == 201 or status_code == 202:
+			print ("The following service object was successfully imported: " + fmcpostdata["name"])
+		else :
+			r.raise_for_status()
+			print ("Error occurred in importing the following object: " + fmcpostdata["name"] + " Post error was " +resp)
+	except requests.exceptions.HTTPError as err:
+		if status_code == 400:
+			print "Object " + objectservicename + " might already exist. Error code 400"
+		else :
+			print ("Error in connection to the server: "+str(err))	
+	finally:
+		if r : r.close()
+	if debugmode == 'Y' or debugmode == 'y':	
+		print " "
+		print "Object service Name " + objectservicename
+		print "Object service Port " + objectservicechild_port
+		print "Object service Protocol " + objectservicechild_protocol
+		print "Object service Description " + objectservicedescription
 		print " "
