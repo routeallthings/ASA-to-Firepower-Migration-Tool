@@ -124,14 +124,18 @@ objectprotocolgroup = asaconfig.find_objects(r"^object-group protocol")
 for specificobjectnetwork in objectnetwork:
 	objectnetwork_before = specificobjectnetwork.text
 	objectnetworkname = objectnetwork_before[len('object network '):]
+	objectnetworkname = objectnetworkname.lstrip()
 	for objectnetworkchild in specificobjectnetwork.children:
 		objectnetworkchild_before = objectnetworkchild.text
 		if "host" in objectnetworkchild_before:
 			objectnetworkip = objectnetworkchild_before[len('host '):]
+			objectnetworkip = objectnetworkip.lstrip()
 		if "range" in objectnetworkchild_before:
 			objectnetworkip = objectnetworkchild_before[len('range '):]
+			objectnetworkip = objectnetworkip.lstrip()
 		if "subnet" in objectnetworkchild_before:
 			objectnetworkip_b1 = objectnetworkchild_before[len('subnet '):]
+			objectnetworkip_b1 = objectnetworkip_b1.lstrip()
 			objectnetworkip_network = objectnetworkip_b1.split(" ")[:1][0]
 			if ipv4_address.match(objectnetworkip_network):
 				'''Match IPv4 against a regex and convert the subnet portion to CIDR for the import process'''
@@ -143,6 +147,7 @@ for specificobjectnetwork in objectnetwork:
 				objectnetworkip = objectnetworkip_network
 		if "description" in objectnetworkchild_before:
 			objectnetworkdescription = objectnetworkchild_before[len('description '):]
+			objectnetworkdescription = objectnetworkdescription.lstrip()
 		if not "description" in objectnetworkchild_before:
 			objectnetworkdescription = "Imported Object"
 	fmcpostdata = {
@@ -265,12 +270,13 @@ finally:
 for specificobjectnetworkgroup in objectnetworkgroup:
 	objectnetworkgroup_before = specificobjectnetworkgroup.text
 	objectnetworkgroupname = objectnetworkgroup_before[len('object network-group '):]
-	
+	objectnetworkgroupname = objectnetworkgroupname.lstrip()
 	for objectnetworkgroupchild in specificobjectnetworkgroup.children:
 		objectnetworkgroupchild_b1 = objectnetworkgroupchild.text
 		objectnetworkgroupchild_b2 = objectnetworkgroupchild_b1.replace("network-object ", "")
 		if "object" in objectnetworkgroupchild_b2:
 			objectnetworkgroupchild_name = objectnetworkgroupchild_b2[len('object '):]
+			objectnetworkgroupchild_name = objectnetworkgroupchild_name.lstrip()
 			try:
 				objectnetworkgroupchild_id = next(item for item in objectnetworkgroup_fullobjectlist if item.get("name") == objectnetworkgroupchild_name)
 				objectnetworkgroupchild_type = objectnetworkgroupchild_id['type']
@@ -293,6 +299,7 @@ for specificobjectnetworkgroup in objectnetworkgroup:
 				objectnetworkgroup_objectlist.append(objectnetworkgroupchild_set)
 		if "host" in objectnetworkgroupchild_b2:
 			objectnetworkgroupchild_value = objectnetworkgroupchild_b2[len('host '):]
+			objectnetworkgroupchild_value = objectnetworkgroupchild_value.lstrip()
 			objectnetworkgroupchild_set = {
 			   "type": "host",
 			   "value": objectnetworkgroupchild_value
@@ -361,10 +368,12 @@ for specificobjectnetworkgroup in objectnetworkgroup:
 ''' Object service '''
 for specificobjectservice in objectservice:
 	objectservice_before = specificobjectservice.text
-	objectservicename = objectservice_before[len('object service '):]
+	objectservicename = objectservice_before[len('object service'):]
+	objectservicename = objectservicename.lstrip()
 	for objectservicechild in specificobjectservice.children:
 		objectservicechild_before = objectservicechild.text
 		objectservicechild_b1 = objectservicechild_before[len(' service '):]
+		objectservicechild_b1 = objectservicechild_b1.lstrip()
 		objectservicechild_protocol = objectservicechild_b1.split(" ")[:1][0]
 		if re.match(r"\d+",objectservicechild_protocol) :
 			print " "
@@ -388,6 +397,7 @@ for specificobjectservice in objectservice:
 					objectservicechild_port = objectservicechild_firstport + "-" + objectservicechild_lastport
 			if "description" in objectservicechild_before:
 				objectservicedescription = objectservicechild_before[len('description '):]
+				objectservicedescription = objectservicedescription.lstrip()
 			if not "description" in objectservicechild_before:
 				objectservicedescription = "Imported Object"
 			fmcpostdata = {
@@ -424,6 +434,7 @@ for specificobjectservice in objectservice:
 '''Object Service Group '''
 
 '''Get list of existing objects'''
+'''
 try:
 	r = requests.get(fmcportobjecturl, headers=headers, verify=False)
 	status_code = r.status_code
@@ -452,7 +463,7 @@ except requests.exceptions.HTTPError as err:
 	print ("Error in connection --> "+str(err))
 finally:
 	if r : r.close()
-'''
+	
 for specificobjectservicegroup in objectservicegroup:
 	objectservicegroup_before = specificobjectservicegroup.text
 	objectservicegroupname = objectservicegroup_before.split(" ")[2:][0]
@@ -499,4 +510,6 @@ for specificobjectservicegroup in objectservicegroup:
 					print "Specific Protocol = " + objectservicegroupchild_b1
 					print ""
 		if "port-object" in objectservicegroupchild_b1:
+			print ""
+			print "PORT-OBJECT NOT COMPLETE"
 '''
