@@ -1,68 +1,69 @@
-aol, TCP, 5190, America Online
-bgp, TCP, 179, Border Gateway Protocol RFC 1163
-biff, UDP, 512, Used by mail system to notify users that new mail is received
-bootpc, UDP, 68, Bootstrap Protocol Client
-bootps, UDP, 67, Bootstrap Protocol Server
-chargen, TCP, 19, Character Generator
-citrix-ica, TCP, 1494, Citrix Independent Computing Architecture (ICA) protocol
-cmd, TCP, 514, Similar to exec except that cmd has automatic authentication
-ctiqbe, TCP, 2748, Computer Telephony Interface Quick Buffer Encoding
-daytime, TCP, 13, Day time RFC 867
-discard, TCP and UDP, 9, Discard
-domain, TCP and UDP, 53, DNS
-dnsix, UDP, 195, DNSIX Session Management Module Audit Redirector
-echo, TCP and UDP, 7, Echo
-exec, TCP, 512, Remote process execution
-finger, TCP, 79, Finger
-ftp, TCP, 21, File Transfer Protocol (control port)
-ftp-data, TCP, 20, File Transfer Protocol (data port)
-gopher, TCP, 70, Gopher
-https, TCP, 443, HTTP over SSL
-h323, TCP, 1720, H.323 call signalling
-hostname, TCP, 101, NIC Host Name Server
-ident, TCP, 113, Ident authentication service
-imap4, TCP, 143, Internet Message Access Protocol, version 4
-irc, TCP, 194, Internet Relay Chat protocol
-isakmp, UDP, 500, Internet Security Association and Key Management Protocol
-kerberos, TCP and UDP, 750 Kerberos
-klogin, TCP, 543, KLOGIN
-kshell, TCP, 544, Korn Shell
-ldap, TCP, 389, Lightweight Directory Access Protocol
-ldaps, TCP, 636, Lightweight Directory Access Protocol (SSL)
-lpd, TCP, 515, Line Printer Daemon - printer spooler
-login, TCP, 513, Remote login
-lotusnotes, TCP, 1352, IBM Lotus Notes
-mobile-ip, UDP, 434, MobileIP-Agent
-nameserver, UDP, 42, Host Name Server
-netbios-ns, UDP, 137, NetBIOS Name Service
-netbios-dgm, UDP, 138, NetBIOS Datagram Service
-netbios-ssn, TCP, 139, NetBIOS Session Service
-nntp, TCP, 119, Network News Transfer Protocol
-ntp, UDP, 123, Network Time Protocol
-pcanywhere-status, UDP, 5632, pcAnywhere status
-pcanywhere-data, TCP, 5631, pcAnywhere data
-pim-auto-rp, TCP and UDP, 496, Protocol Independent Multicast, reverse path flooding, dense mode
-pop2, TCP, 109, Post Office Protocol - Version 2
-pop3, TCP, 110, Post Office Protocol - Version 3
-pptp, TCP, 1723, Point-to-Point Tunneling Protocol
-radius, UDP, 1645, Remote Authentication Dial-In User Service
-radius-acct, UDP, 1646, Remote Authentication Dial-In User Service(accounting)
-rip, UDP, 520, Routing Information Protocol
-secureid-udp, UDP, 5510, SecureID over UDP
-smtp, TCP, 25, Simple Mail Transport Protocol
-snmp, UDP, 161, Simple Network Management Protocol
-snmptrap, UDP, 162, Simple Network Management Protocol - Trap
-sqlnet, TCP, 1521, Structured Query Language Network
-ssh, TCP, 22, Secure Shell
-sunrpc, TCP and UDP, 111, Sun Remote Procedure Call
-syslog, UDP, 514, System Log
-tacacs, TCP and UDP, 49, Terminal Access Controller Access Control System Plus
-talk, TCP and UDP, 517, Talk
-telnet, TCP, 23, RFC 854 Telnet
-tftp, UDP, 69, Trivial File Transfer Protocol
-time, UDP, 37, Time
-uucp, TCP, 540, UNIX-to-UNIX Copy Program
-who, UDP, 513, Who
-whois, TCP, 43, Who Is
-www, TCP, 80, World Wide Web
-xdmcp, UDP, 177, X Display Manager Control Protocol
+name,protocol,port,description,,
+aol, TCP,5190, America Online,,
+bgp, TCP,179, Border Gateway Protocol RFC 1163,,
+biff, UDP,512, Used by mail system to notify users that new mail is received,,
+bootpc, UDP,68, Bootstrap Protocol Client,,
+bootps, UDP,67, Bootstrap Protocol Server,,
+chargen, TCP,19, Character Generator,,
+citrix-ica, TCP,1494, Citrix Independent Computing Architecture (ICA) protocol,,
+cmd, TCP,514, Similar to exec except that cmd has automatic authentication,,
+ctiqbe, TCP,2748, Computer Telephony Interface Quick Buffer Encoding,,
+daytime, TCP,13, Day time RFC 867,,
+discard, TCP and UDP,9, Discard,,
+domain, TCP and UDP,53, DNS,,
+dnsix, UDP,195, DNSIX Session Management Module Audit Redirector,,
+echo, TCP and UDP,7, Echo,,
+exec, TCP,512, Remote process execution,,
+finger, TCP,79, Finger,,
+ftp, TCP,21, File Transfer Protocol (control port),,
+ftp-data, TCP,20, File Transfer Protocol (data port),,
+gopher, TCP,70, Gopher,,
+https, TCP,443, HTTP over SSL,,
+h323, TCP,1720, H.323 call signalling,,
+hostname, TCP,101, NIC Host Name Server,,
+ident, TCP,113, Ident authentication service, version 4,
+imap4, TCP,143, Internet Message Access Protocol,,
+irc, TCP,194, Internet Relay Chat protocol,,
+isakmp, UDP,500, Internet Security Association and Key Management Protocol,,
+kerberos, TCP and UDP,750,Kerberos,,
+klogin, TCP,543, KLOGIN,,
+kshell, TCP,544, Korn Shell,,
+ldap, TCP,389, Lightweight Directory Access Protocol,,
+ldaps, TCP,636, Lightweight Directory Access Protocol (SSL),,
+lpd, TCP,515, Line Printer Daemon - printer spooler,,
+login, TCP,513, Remote login,,
+lotusnotes, TCP,1352, IBM Lotus Notes,,
+mobile-ip, UDP,434, MobileIP-Agent,,
+nameserver, UDP,42, Host Name Server,,
+netbios-ns, UDP,137, NetBIOS Name Service,,
+netbios-dgm, UDP,138, NetBIOS Datagram Service,,
+netbios-ssn, TCP,139, NetBIOS Session Service,,
+nntp, TCP,119, Network News Transfer Protocol,,
+ntp, UDP,123, Network Time Protocol,,
+pcanywhere-status, UDP,5632, pcAnywhere status,,
+pcanywhere-data, TCP,5631, pcAnywhere data, reverse path flooding, dense mode
+pim-auto-rp, TCP and UDP,496, Protocol Independent Multicast,,
+pop2, TCP,109, Post Office Protocol - Version 2,,
+pop3, TCP,110, Post Office Protocol - Version 3,,
+pptp, TCP,1723, Point-to-Point Tunneling Protocol,,
+radius, UDP,1645, Remote Authentication Dial-In User Service,,
+radius-acct, UDP,1646, Remote Authentication Dial-In User Service(accounting),,
+rip, UDP,520, Routing Information Protocol,,
+secureid-udp, UDP,5510, SecureID over UDP,,
+smtp, TCP,25, Simple Mail Transport Protocol,,
+snmp, UDP,161, Simple Network Management Protocol,,
+snmptrap, UDP,162, Simple Network Management Protocol - Trap,,
+sqlnet, TCP,1521, Structured Query Language Network,,
+ssh, TCP,22, Secure Shell,,
+sunrpc, TCP and UDP,111, Sun Remote Procedure Call,,
+syslog, UDP,514, System Log,,
+tacacs, TCP and UDP,49, Terminal Access Controller Access Control System Plus,,
+talk, TCP and UDP,517, Talk,,
+telnet, TCP,23, RFC 854 Telnet,,
+tftp, UDP,69, Trivial File Transfer Protocol,,
+time, UDP,37, Time,,
+uucp, TCP,540, UNIX-to-UNIX Copy Program,,
+who, UDP,513, Who,,
+whois, TCP,43, Who Is,,
+www, TCP,80, World Wide Web,,
+xdmcp, UDP,177, X Display Manager Control Protocol,,
