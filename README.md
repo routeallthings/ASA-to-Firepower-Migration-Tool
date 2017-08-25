@@ -23,17 +23,18 @@ Just execute the script and answer the questions
 - Migration of Network Objects
 - Migration of Network Object Groups*
 - Migration of Port Objects
+- Migration of Port Object Groups
 
 ## *Caveats
 - Does not import network groups inside network groups
 
 ## Versioning
 
-Version 1.1 - (Added) Import of Port Objects
+Version 1.2 - (Added) Import of Port Object Groups
 
 ## Authors
 
-* **Matt Cross** - *Initial work* - [RouteAllThings](https://github.com/routeallthings)
+* **Matt Cross** - [RouteAllThings](https://github.com/routeallthings)
 
 See also the list of [contributors](https://github.com/routeallthings/ASA-to-Firepower-Converter/contributors) who participated in this project.
 

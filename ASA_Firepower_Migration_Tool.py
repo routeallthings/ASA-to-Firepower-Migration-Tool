@@ -8,19 +8,20 @@ Email: routeallthings@gmail.com
 INSTALL CISCOCONFPARSE (pip install ciscoconfparse==1.2.38)
 
 ---VERSION---
-VERSION 1.1
+VERSION 1.2
 Currently Implemented Features
 - Import of Network Objects
 - Import of Network Object Groups* (Except groups inside groups)
 - Import of Ports
+- Import of Port Groups
 
 Features planned in the near future
-- Import of Port Groups
 - Auto update of script
 - Auto install of CISCOCONFPARSE if missing
 
-Fixed from 1.0
-- Import of network objects without description
+Fixed from 1.1
+- Rest response to parse next page for id
+- Some variable names can be used with both upper/lower case characters
 
 '''
 
@@ -36,28 +37,19 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 import json
 import sys
+import csv
+import urllib2
 
 '''GLOBAL VARIABLES'''
 
-fullpath = raw_input ('Enter the filename of the ASA config: ')
+fullpath = raw_input ('Enter the file path of the ASA config: ')
 fmcpathfull = raw_input ('Enter the IP address of the destination FMC: ')
 fmcpath = "https://" + fmcpathfull
 fmcuser = raw_input ('Enter the username of the destination FMC: ')
 fmcpassword = getpass.getpass('Enter the password of the destination FMC: ')
 debugmode = raw_input ('Debug Mode? (Y/N): ') 
 
-'''NOT IMPLEMENTED'''
-'''importnatq = raw_input ('Do you want to import NAT rules (Y/N): ')'''
-'''importaclq = raw_input ('Do you want to import ACL rules (Y/N): ')'''
-
-'''TESTONLY'''
-'''
-fullpath = os.path.normpath("C:/TFTP-Root/asa.cfg")
-fmcpath = "https://192.168.45.45"
-fmcuser = "admin"
-fmcpassword = "Password1"
-debugmode = "y"
-'''
+csvpath = 'https://raw.githubusercontent.com/routeallthings/ASA-to-Firepower-Migration-Tool/master/PortList.csv'
 
 '''##### BEGIN SCRIPT #####'''
 '''Print Variables in Debug'''
@@ -86,10 +78,10 @@ try:
     if auth_token == None:
         print("auth_token not found. Exiting...")
         print(auth_headers)
-        '''sys.exit()'''
+        sys.exit()
 except Exception as err:
     print ("Error in generating auth token --> "+str(err))
-    '''sys.exit()'''
+    sys.exit()
 headers['X-auth-access-token']=auth_token
 
 fmcnetobjecturl = fmcpath + "/api/fmc_config/v1/domain/default/object/networks"
@@ -107,7 +99,14 @@ if (fmcnetobjectgroupurl[-1] == '/'):
 fmcportobjecturl = fmcpath + "/api/fmc_config/v1/domain/default/object/protocolportobjects"
 if (fmcportobjecturl[-1] == '/'):
     fmcportobjecturl = fmcportobjecturl[:-1]
+fmcportsurl = fmcpath + "/api/fmc_config/v1/domain/default/object/ports"
+if (fmcportsurl[-1] == '/'):
+    fmcportsurl = fmcportsurl[:-1]
+fmcportgroupurl = fmcpath + "/api/fmc_config/v1/domain/default/object/portobjectgroups"
+if (fmcportgroupurl[-1] == '/'):
+    fmcportgroupurl = fmcportgroupurl[:-1]
 
+	
 '''Create Regex Matches'''
 ipv4_address = re.compile('^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$')
 	
@@ -178,13 +177,32 @@ for specificobjectnetwork in objectnetwork:
 		print "Object Network Description " + objectnetworkdescription
 		print " "
 '''Object Network Group '''
-
 '''Get list of existing objects'''
 try:
 	r = requests.get(fmcnetobjecturl, headers=headers, verify=False)
 	status_code = r.status_code
 	resp = r.text
 	if (status_code == 200):
+		resp = r.text
+		resp_nonjson = json.loads(resp)
+		resp_next = resp_nonjson['paging']
+		resp_page = resp_next['pages']
+		if resp_page > 1 :
+			resp_nextpage = resp_next['next']
+			try:
+				items = resp_nonjson["items"]
+			except:
+				if debugmode == 'Y' or debugmode == 'y':
+					print "No Network objects Detected"
+					print " "
+			for page in resp_nextpage:
+				page = json.dumps(page)
+				page = page.strip('"')
+				r = requests.get(page, headers=headers, verify=False)
+				resp_nextcontent = r.text
+				resp_nextcontent_nonjson = json.loads(resp_nextcontent)
+				resp_nextcontent_items = resp_nextcontent_nonjson["items"]
+				items.extend(resp_nextcontent_items)
 		if debugmode == 'Y' or debugmode == 'y':
 			print "GET Network Objects Successful."
 		#print("GET successful. Response data --> ")		
@@ -214,6 +232,26 @@ try:
 	status_code = r.status_code
 	resp = r.text
 	if (status_code == 200):
+		resp = r.text
+		resp_nonjson = json.loads(resp)
+		resp_next = resp_nonjson['paging']
+		resp_page = resp_next['pages']
+		if resp_page > 1 :
+			resp_nextpage = resp_next['next']
+			try:
+				items = resp_nonjson["items"]
+			except:
+				if debugmode == 'Y' or debugmode == 'y':
+					print "No Host objects Detected"
+					print " "
+			for page in resp_nextpage:
+				page = json.dumps(page)
+				page = page.strip('"')
+				r = requests.get(page, headers=headers, verify=False)
+				resp_nextcontent = r.text
+				resp_nextcontent_nonjson = json.loads(resp_nextcontent)
+				resp_nextcontent_items = resp_nextcontent_nonjson["items"]
+				items.extend(resp_nextcontent_items)
 		if debugmode == 'Y' or debugmode == 'y':
 			print "GET Hosts Objects Successful."
 		#print("GET successful. Response data --> ")		
@@ -241,8 +279,27 @@ finally:
 try:
 	r = requests.get(fmcrangesobjecturl, headers=headers, verify=False)
 	status_code = r.status_code
-	resp = r.text
 	if (status_code == 200):
+		resp = r.text
+		resp_nonjson = json.loads(resp)
+		resp_next = resp_nonjson['paging']
+		resp_page = resp_next['pages']
+		if resp_page > 1 :
+			resp_nextpage = resp_next['next']
+			try:
+				items = resp_nonjson["items"]
+			except:
+				if debugmode == 'Y' or debugmode == 'y':
+					print "No Range objects Detected"
+					print " "
+			for page in resp_nextpage:
+				page = json.dumps(page)
+				page = page.strip('"')
+				r = requests.get(page, headers=headers, verify=False)
+				resp_nextcontent = r.text
+				resp_nextcontent_nonjson = json.loads(resp_nextcontent)
+				resp_nextcontent_items = resp_nextcontent_nonjson["items"]
+				items.extend(resp_nextcontent_items)
 		if debugmode == 'Y' or debugmode == 'y':
 			print "GET Range Objects Successful."
 		#print("GET successful. Response data --> ")
@@ -278,12 +335,12 @@ for specificobjectnetworkgroup in objectnetworkgroup:
 			objectnetworkgroupchild_name = objectnetworkgroupchild_b2[len('object '):]
 			objectnetworkgroupchild_name = objectnetworkgroupchild_name.lstrip()
 			try:
-				objectnetworkgroupchild_id = next(item for item in objectnetworkgroup_fullobjectlist if item.get("name") == objectnetworkgroupchild_name)
+				objectnetworkgroupchild_id = next(item for item in objectnetworkgroup_fullobjectlist if item.get("name") == objectnetworkgroupchild_name.lower() or item.get("name") == objectnetworkgroupchild_name.upper() or item.get("name") == objectnetworkgroupchild_name)
 				objectnetworkgroupchild_type = objectnetworkgroupchild_id['type']
 			except:
 				print "Error in locating UUID for " + objectnetworkgroupchild_name
 			try:
-				objectnetworkgroupchild_uuid = next(item for item in objectnetworkgroup_fullobjectlist if item.get("name") == objectnetworkgroupchild_name)
+				objectnetworkgroupchild_uuid = next(item for item in objectnetworkgroup_fullobjectlist if item.get("name") == objectnetworkgroupchild_name.lower() or item.get("name") == objectnetworkgroupchild_name.upper() or item.get("name") == objectnetworkgroupchild_name)
 				objectnetworkgroupchild_id = objectnetworkgroupchild_uuid['id']
 			except:
 				print "Error in locating UUID for " + objectnetworkgroupchild_name
@@ -400,6 +457,17 @@ for specificobjectservice in objectservice:
 				objectservicedescription = objectservicedescription.lstrip()
 			if not "description" in objectservicechild_before:
 				objectservicedescription = "Imported Object"
+			if re.match(r"^[a-zA-Z]*$",objectservicechild_port):
+				'''Load CSV of known ports'''
+				try:
+					csvdownload = urllib2.urlopen(csvpath)
+					defaultports = csv.DictReader(csvdownload)
+				except:
+					print ""
+					print "Could not load the default CSV port file"
+					print "Format is name, protocol (TCP, UDP, TCP and UDP), Port, Description)"
+				objectservicechild_convertedport = next(ports for ports in defaultports if ports['name'] == objectservicechild_port)
+				objectservicechild_port = objectservicechild_convertedport['port']
 			fmcpostdata = {
 				"name" : objectservicename,
 				"description" : objectservicedescription,
@@ -434,23 +502,34 @@ for specificobjectservice in objectservice:
 '''Object Service Group '''
 
 '''Get list of existing objects'''
-'''
 try:
-	r = requests.get(fmcportobjecturl, headers=headers, verify=False)
+	r = requests.get(fmcportsurl, headers=headers, verify=False)
 	status_code = r.status_code
-	resp = r.text
 	if (status_code == 200):
+		resp = r.text
+		resp_nonjson = json.loads(resp)
+		resp_next = resp_nonjson['paging']
+		resp_page = resp_next['pages']
+		if resp_page > 1 :
+			resp_nextpage = resp_next['next']
+			try:
+				items = resp_nonjson["items"]
+			except:
+				if debugmode == 'Y' or debugmode == 'y':
+					print "No Service objects Detected"
+					print " "
+			for page in resp_nextpage:
+				page = json.dumps(page)
+				page = page.strip('"')
+				r = requests.get(page, headers=headers, verify=False)
+				resp_nextcontent = r.text
+				resp_nextcontent_nonjson = json.loads(resp_nextcontent)
+				resp_nextcontent_items = resp_nextcontent_nonjson["items"]
+				items.extend(resp_nextcontent_items)
 		if debugmode == 'Y' or debugmode == 'y':
 			print "GET Service Objects Successful."
 		#print("GET successful. Response data --> ")		
-		try:
-			json_resp = json.loads(resp)
-			items = json_resp["items"]
-		except:
-			if debugmode == 'Y' or debugmode == 'y':
-				print "No Service objects Detected"
-				print " "
-		# Extract the numbers from the items whose name starts with objectservicegroupchild_name and keep adding them to allEntries
+		
 		try:
 			objectservicegroup_fullobjectlist.extend(items)
 		except NameError:
@@ -470,21 +549,144 @@ for specificobjectservicegroup in objectservicegroup:
 	try:
 		objectservicegroupprotocol = objectservicegroup_before.split(" ")[3:][0]
 	except:
-		Not a Protocol Group
+		if debugmode == 'Y' or debugmode == 'y':
+				print " "
+				print "NOT A PROTOCOL"
+				print " "
 	for objectservicegroupchild in specificobjectservicegroup.children:
 		objectservicegroupchild_b0 = objectservicegroupchild.text
 		objectservicegroupchild_b1 = objectservicegroupchild_b0.split(" ")[1:][0]
 		objectservicegroupchild_b2 = objectservicegroupchild_b0.split(" ")[2:][0]
+		'''Port Object'''
+		if "port-object" in objectservicegroupchild_b1:
+			objectservicechild_singleport = None
+			objectservicechild_firstport = None
+			objectservicechild_lastport = None
+			objectservicechild_protocol = objectservicegroupprotocol
+			objectservicechild_amountofport = objectservicegroupchild_b0.split(" ")[2:][0]
+			if objectservicechild_amountofport in ["eq"]:
+				objectservicechild_singleport = objectservicegroupchild_b0.split(" ")[3:][0]
+			if objectservicechild_amountofport in ["range"]:
+				objectservicechild_firstport = objectservicegroupchild_b0.split(" ")[3:][0]
+				objectservicechild_lastport = objectservicegroupchild_b0.split(" ")[4:][0]
+			if not objectservicechild_singleport == None:
+				objectservicechild_port = objectservicechild_singleport
+			if not objectservicechild_firstport == None:
+				objectservicechild_port = objectservicechild_firstport + "-" + objectservicechild_lastport
+			objectservicedescription = "Imported Object"
+			if re.match(r"^[a-zA-Z]*$",objectservicechild_port):
+				'''Load CSV of known ports'''
+				try:
+					csvdownload = urllib2.urlopen(csvpath)
+					defaultports = csv.DictReader(csvdownload)
+				except:
+					print ""
+					print "Could not load the default CSV port file"
+					print "Format is name, protocol (TCP, UDP, TCP and UDP), Port, Description)"
+				objectservicechild_convertedport = next(ports for ports in defaultports if ports['name'] == objectservicechild_port)
+				objectservicechild_port = objectservicechild_convertedport['port']
+			objectservicename = objectservicechild_protocol + objectservicechild_port
+			fmcpostdata = {
+				"name" : objectservicename,
+				"description" : objectservicedescription,
+				"port" : objectservicechild_port,
+				"protocol" : objectservicechild_protocol,
+				"type" : "ProtocolPortObject"
+			}
+			try:
+				r = requests.post(fmcportobjecturl, data=json.dumps(fmcpostdata), headers=headers, verify=False);
+				status_code = r.status_code
+				resp = r.text
+				if status_code == 201 or status_code == 202:
+					print ("The following service object was successfully imported: " + fmcpostdata["name"])
+				else :
+					r.raise_for_status()
+					print ("Error occurred in importing the following object: " + fmcpostdata["name"] + " Post error was " +resp)
+			except requests.exceptions.HTTPError as err:
+				if status_code == 400:
+					print "Object " + objectservicename + " might already exist. Error code 400"
+				else :
+					print ("Error in connection to the server: "+str(err))	
+			finally:
+				if r : r.close()
+				if debugmode == 'Y' or debugmode == 'y':	
+					print " "
+					print "Object service Name " + objectservicename
+					print "Object service Port " + objectservicechild_port
+					print "Object service Protocol " + objectservicechild_protocol
+					print "Object service Description " + objectservicedescription
+					print " "
+			try:
+				r = requests.get(fmcportsurl, headers=headers, verify=False)
+				status_code = r.status_code
+				objectservicegroup_fullobjectlist = []
+				if (status_code == 200):
+					resp = r.text
+					resp_nonjson = json.loads(resp)
+					resp_next = resp_nonjson['paging']
+					resp_page = resp_next['pages']
+					if resp_page > 1 :
+						resp_nextpage = resp_next['next']
+						try:
+							items = resp_nonjson["items"]
+						except:
+							if debugmode == 'Y' or debugmode == 'y':
+								print "No Service objects Detected"
+								print " "
+						for page in resp_nextpage:
+							page = json.dumps(page)
+							page = page.strip('"')
+							r = requests.get(page, headers=headers, verify=False)
+							resp_nextcontent = r.text
+							resp_nextcontent_nonjson = json.loads(resp_nextcontent)
+							resp_nextcontent_items = resp_nextcontent_nonjson["items"]
+							items.extend(resp_nextcontent_items)
+					if debugmode == 'Y' or debugmode == 'y':
+							print "GET Service Objects Successful."
+						#print("GET successful. Response data --> ")		
+					try:
+						objectservicegroup_fullobjectlist.extend(items)
+					except NameError:
+						objectservicegroup_fullobjectlist = []
+						objectservicegroup_fullobjectlist.extend(items)
+				else:
+					#r.raise_for_status()
+					print("Error occurred in GET --> "+resp + " i --> " + str(i))
+			except requests.exceptions.HTTPError as err:
+				print ("Error in connection --> "+str(err))
+			finally:
+				if r : r.close()
+			try:
+				objectservicegroupchild_id = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicename.lower() or item.get("name") == objectservicename.upper() or item.get("name") == objectservicename)
+				objectservicegroupchild_type = objectservicegroupchild_id['type']
+			except:
+				print "Error in locating UUID for " + objectservicename
+			try:
+				objectservicegroupchild_uuid = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicename.lower() or item.get("name") == objectservicename.upper() or item.get("name") == objectservicename)
+				objectservicegroupchild_id = objectservicegroupchild_uuid['id']
+			except:
+				print "Error in locating UUID for " + objectservicename
+			objectservicegroupchild_set = {
+			"type": objectservicegroupchild_type,
+			"name": objectservicename,
+			"id": objectservicegroupchild_id
+			}
+			try:
+				objectservicegroup_objectlist.append(objectservicegroupchild_set)
+			except NameError:
+				objectservicegroup_objectlist = []
+				objectservicegroup_objectlist.append(objectservicegroupchild_set)
+		'''Service Object'''
 		if "service-object" in objectservicegroupchild_b1:
 			if "object" in objectservicegroupchild_b2:
 				objectservicegroupchild_name = objectservicegroupchild_b0.split(" ")[3:][0]
 				try:
-					objectservicegroupchild_id = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicegroupchild_name)
+					objectservicegroupchild_id = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicegroupchild_name.lower() or item.get("name") == objectservicegroupchild_name.upper() or item.get("name") == objectservicegroupchild_name)
 					objectservicegroupchild_type = objectservicegroupchild_id['type']
 				except:
 					print "Error in locating UUID for " + objectservicegroupchild_name
 				try:
-					objectservicegroupchild_uuid = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicegroupchild_name)
+					objectservicegroupchild_uuid = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicegroupchild_name.lower() or item.get("name") == objectservicegroupchild_name.upper() or item.get("name") == objectservicegroupchild_name)
 					objectservicegroupchild_id = objectservicegroupchild_uuid['id']
 				except:
 					print "Error in locating UUID for " + objectservicegroupchild_name
@@ -498,18 +700,154 @@ for specificobjectservicegroup in objectservicegroup:
 				except NameError:
 					objectservicegroup_objectlist = []
 					objectservicegroup_objectlist.append(objectservicegroupchild_set)
-			if not "description" in objectservicegroupchild_b1 and not "object" in objectservicegroupchild_b2:
-				objectservicegroupchild_protocol = objectservicegroupchild_b2
+			if "tcp" in objectservicegroupchild_b2 or "udp" in objectservicegroupchild_b2:
+				'''Create First Port'''
+				objectservicechild_singleport = None
+				objectservicechild_firstport = None
+				objectservicechild_lastport = None
+				objectservicechild_protocol = objectservicegroupchild_b0.split(" ")[2:][0]
+				objectservicechild_direction = objectservicegroupchild_b0.split(" ")[3:][0]
+				objectservicechild_amountofport = objectservicegroupchild_b0.split(" ")[4:][0]
+				if objectservicechild_amountofport in ["eq"]:
+					objectservicechild_singleport = objectservicegroupchild_b0.split(" ")[5:][0]
+				if objectservicechild_amountofport in ["range"]:
+					objectservicechild_firstport = objectservicegroupchild_b0.split(" ")[5:][0]
+					objectservicechild_lastport = objectservicegroupchild_b0.split(" ")[6:][0]
+				if not objectservicechild_singleport == None:
+					objectservicechild_port = objectservicechild_singleport
+				if not objectservicechild_firstport == None:
+					objectservicechild_port = objectservicechild_firstport + "-" + objectservicechild_lastport
+				objectservicedescription = "Imported Object"
+				if re.match(r"^[a-zA-Z]*$",objectservicechild_port):
+					'''Load CSV of known ports'''
+					try:
+						csvdownload = urllib2.urlopen(csvpath)
+						defaultports = csv.DictReader(csvdownload)
+					except:
+						print ""
+						print "Could not load the default CSV port file"
+						print "Format is name, protocol (TCP, UDP, TCP and UDP), Port, Description)"
+					objectservicechild_convertedport = next(ports for ports in defaultports if ports['name'] == objectservicechild_port)
+					objectservicechild_port = objectservicechild_convertedport['port']
+				objectservicename = objectservicechild_protocol + objectservicechild_port
+				fmcpostdata = {
+					"name" : objectservicename,
+					"description" : objectservicedescription,
+					"port" : objectservicechild_port,
+					"protocol" : objectservicechild_protocol,
+					"type" : "ProtocolPortObject"
+				}
 				try:
-					objectservicegroupchildportamount = objectservicegroupchild_b0.split(" ")[4:][0]
-					objectservicegroupchildportrange = objectservicegroupchild_b0.split(" ")[5:][0]
+					r = requests.post(fmcportobjecturl, data=json.dumps(fmcpostdata), headers=headers, verify=False);
+					status_code = r.status_code
+					resp = r.text
+					if status_code == 201 or status_code == 202:
+						print ("The following service object was successfully imported: " + fmcpostdata["name"])
+					else :
+						r.raise_for_status()
+						print ("Error occurred in importing the following object: " + fmcpostdata["name"] + " Post error was " +resp)
+				except requests.exceptions.HTTPError as err:
+					if status_code == 400:
+						print "Object " + objectservicename + " might already exist. Error code 400"
+					else :
+						print ("Error in connection to the server: "+str(err))	
+				finally:
+					if r : r.close()
+				if debugmode == 'Y' or debugmode == 'y':	
+					print " "
+					print "Object service Name " + objectservicename
+					print "Object service Port " + objectservicechild_port
+					print "Object service Protocol " + objectservicechild_protocol
+					print "Object service Description " + objectservicedescription
+					print " "
+				try:
+					r = requests.get(fmcportsurl, headers=headers, verify=False)
+					status_code = r.status_code
+					objectservicegroup_fullobjectlist = []
+					if (status_code == 200):
+						resp = r.text
+						resp_nonjson = json.loads(resp)
+						resp_next = resp_nonjson['paging']
+						resp_page = resp_next['pages']
+						if resp_page > 1 :
+							resp_nextpage = resp_next['next']
+							try:
+								items = resp_nonjson["items"]
+							except:
+								if debugmode == 'Y' or debugmode == 'y':
+									print "No Service objects Detected"
+									print " "
+							for page in resp_nextpage:
+								page = json.dumps(page)
+								page = page.strip('"')
+								r = requests.get(page, headers=headers, verify=False)
+								resp_nextcontent = r.text
+								resp_nextcontent_nonjson = json.loads(resp_nextcontent)
+								resp_nextcontent_items = resp_nextcontent_nonjson["items"]
+								items.extend(resp_nextcontent_items)
+						if debugmode == 'Y' or debugmode == 'y':
+								print "GET Service Objects Successful."
+							#print("GET successful. Response data --> ")		
+						try:
+							objectservicegroup_fullobjectlist.extend(items)
+						except NameError:
+							objectservicegroup_fullobjectlist = []
+							objectservicegroup_fullobjectlist.extend(items)
+					else:
+						#r.raise_for_status()
+						print("Error occurred in GET --> "+resp + " i --> " + str(i))
+				except requests.exceptions.HTTPError as err:
+					print ("Error in connection --> "+str(err))
+				finally:
+					if r : r.close()
+				try:
+					objectservicegroupchild_id = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicename.lower() or item.get("name") == objectservicename.upper() or item.get("name") == objectservicename)
+					objectservicegroupchild_type = objectservicegroupchild_id['type']
 				except:
-					print ""
-					print "Individual non-specific protocol. Please manually add to the group after."
-					print "Group Object Name = " + objectservicegroupname
-					print "Specific Protocol = " + objectservicegroupchild_b1
-					print ""
-		if "port-object" in objectservicegroupchild_b1:
-			print ""
-			print "PORT-OBJECT NOT COMPLETE"
-'''
+					print "Error in locating UUID for " + objectservicename
+				try:
+					objectservicegroupchild_uuid = next(item for item in objectservicegroup_fullobjectlist if item.get("name") == objectservicename.lower() or item.get("name") == objectservicename.upper() or item.get("name") == objectservicename)
+					objectservicegroupchild_id = objectservicegroupchild_uuid['id']
+				except:
+					print "Error in locating UUID for " + objectservicename
+				objectservicegroupchild_set = {
+				"type": objectservicegroupchild_type,
+				"name": objectservicename,
+				"id": objectservicegroupchild_id
+				}
+				try:
+					objectservicegroup_objectlist.append(objectservicegroupchild_set)
+				except NameError:
+					objectservicegroup_objectlist = []
+					objectservicegroup_objectlist.append(objectservicegroupchild_set)
+	fmcpostdata_b = {
+	"objects": objectservicegroup_objectlist,
+	"name": objectservicegroupname,
+	"type": "PortObjectGroup"
+	}
+	fmcpostdata = json.dumps(fmcpostdata_b)
+	try:
+		r = requests.post(fmcportgroupurl, data=fmcpostdata, headers=headers, verify=False);
+		status_code = r.status_code
+		resp = r.text
+		if status_code == 201 or status_code == 202:
+			print ("The following object group was successfully imported: " + objectservicegroupname)
+		else :
+			r.raise_for_status()
+			print ("Error occurred in importing the following object: " + objectservicegroupname + " Post error was " +resp)
+	except requests.exceptions.HTTPError as err:
+		if status_code == 400:
+			print "Object " + objectservicegroupname + " might already exist or is referencing a missing object. Error code 400"
+		else :
+			print ("Error in connection to the server: "+str(err))	
+	finally:
+		if r : r.close()
+	if debugmode == 'Y' or debugmode == 'y':	
+		print " "
+		print "Object Service Group Name " + objectservicegroupname
+		print " "
+		print "Object Service Group POST " + fmcpostdata
+		print " "
+	'''Clear Variables in Loop'''
+	objectservicegroup_objectlist = []
+			
