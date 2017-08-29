@@ -187,14 +187,14 @@ try:
 		resp_nonjson = json.loads(resp)
 		resp_next = resp_nonjson['paging']
 		resp_page = resp_next['pages']
+		try:
+				items = resp_nonjson["items"]
+		except:
+			if debugmode == 'Y' or debugmode == 'y':
+				print "No Network objects Detected"
+				print " "
 		if resp_page > 1 :
 			resp_nextpage = resp_next['next']
-			try:
-				items = resp_nonjson["items"]
-			except:
-				if debugmode == 'Y' or debugmode == 'y':
-					print "No Network objects Detected"
-					print " "
 			for page in resp_nextpage:
 				page = json.dumps(page)
 				page = page.strip('"')
@@ -236,14 +236,14 @@ try:
 		resp_nonjson = json.loads(resp)
 		resp_next = resp_nonjson['paging']
 		resp_page = resp_next['pages']
+		try:
+				items = resp_nonjson["items"]
+		except:
+			if debugmode == 'Y' or debugmode == 'y':
+				print "No Host objects Detected"
+				print " "
 		if resp_page > 1 :
 			resp_nextpage = resp_next['next']
-			try:
-				items = resp_nonjson["items"]
-			except:
-				if debugmode == 'Y' or debugmode == 'y':
-					print "No Host objects Detected"
-					print " "
 			for page in resp_nextpage:
 				page = json.dumps(page)
 				page = page.strip('"')
@@ -284,14 +284,14 @@ try:
 		resp_nonjson = json.loads(resp)
 		resp_next = resp_nonjson['paging']
 		resp_page = resp_next['pages']
+		try:
+				items = resp_nonjson["items"]
+		except:
+			if debugmode == 'Y' or debugmode == 'y':
+				print "No Range objects Detected"
+				print " "
 		if resp_page > 1 :
 			resp_nextpage = resp_next['next']
-			try:
-				items = resp_nonjson["items"]
-			except:
-				if debugmode == 'Y' or debugmode == 'y':
-					print "No Range objects Detected"
-					print " "
 			for page in resp_nextpage:
 				page = json.dumps(page)
 				page = page.strip('"')
@@ -510,14 +510,14 @@ try:
 		resp_nonjson = json.loads(resp)
 		resp_next = resp_nonjson['paging']
 		resp_page = resp_next['pages']
+		try:
+				items = resp_nonjson["items"]
+		except:
+			if debugmode == 'Y' or debugmode == 'y':
+				print "No Service objects Detected"
+				print " "
 		if resp_page > 1 :
 			resp_nextpage = resp_next['next']
-			try:
-				items = resp_nonjson["items"]
-			except:
-				if debugmode == 'Y' or debugmode == 'y':
-					print "No Service objects Detected"
-					print " "
 			for page in resp_nextpage:
 				page = json.dumps(page)
 				page = page.strip('"')
@@ -625,14 +625,14 @@ for specificobjectservicegroup in objectservicegroup:
 					resp_nonjson = json.loads(resp)
 					resp_next = resp_nonjson['paging']
 					resp_page = resp_next['pages']
+					try:
+							items = resp_nonjson["items"]
+					except:
+						if debugmode == 'Y' or debugmode == 'y':
+							print "No Service objects Detected"
+							print " "
 					if resp_page > 1 :
 						resp_nextpage = resp_next['next']
-						try:
-							items = resp_nonjson["items"]
-						except:
-							if debugmode == 'Y' or debugmode == 'y':
-								print "No Service objects Detected"
-								print " "
 						for page in resp_nextpage:
 							page = json.dumps(page)
 							page = page.strip('"')
@@ -769,14 +769,14 @@ for specificobjectservicegroup in objectservicegroup:
 						resp_nonjson = json.loads(resp)
 						resp_next = resp_nonjson['paging']
 						resp_page = resp_next['pages']
+						try:
+								items = resp_nonjson["items"]
+						except:
+							if debugmode == 'Y' or debugmode == 'y':
+								print "No Service objects Detected"
+								print " "
 						if resp_page > 1 :
 							resp_nextpage = resp_next['next']
-							try:
-								items = resp_nonjson["items"]
-							except:
-								if debugmode == 'Y' or debugmode == 'y':
-									print "No Service objects Detected"
-									print " "
 							for page in resp_nextpage:
 								page = json.dumps(page)
 								page = page.strip('"')
