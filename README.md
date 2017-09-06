@@ -30,7 +30,7 @@ Just execute the script and answer the questions
 
 ## Versioning
 
-Version 1.2 - (Added) Import of Port Object Groups
+Version 1.3 - (Added) Section for ACL deployment
 
 ## Authors
 

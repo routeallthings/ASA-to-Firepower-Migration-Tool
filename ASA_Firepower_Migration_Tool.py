@@ -15,11 +15,13 @@ Currently Implemented Features
 - Import of Network Object Groups* (Except groups inside groups)
 - Import of Ports
 - Import of Port Groups
-- Import of ACL
+
 
 Features planned in the near future
 - NAT
 - Routes
+- Import of ACL
+- Import of Network groups inside Network groups
 
 '''
 
@@ -62,7 +64,8 @@ except ImportError:
 fullpath = raw_input ('Enter the file path of the ASA config: ')
 importnetworkobjectsq = raw_input ('Do you want to import Network Objects? (Y/N): ')
 importserviceobjectsq = raw_input ('Do you want to import Port Objects? (Y/N): ')
-importaclq = raw_input ('Do you want to import ACL rules? IN DEVELOPMENT (Y/N): ')
+'''importaclq = raw_input ('Do you want to import ACL rules? IN DEVELOPMENT (Y/N): ')'''
+importaclq = 'N'
 if "Y" in importaclq or "y" in importaclq or "yes" in importaclq or "Yes" in importaclq or "YES" in importaclq:
 	importaclnameq = ('Enter a name for the ACL that will show up in Firepower Management Center: ')
 fullpath = raw_input ('Enter the file path of the ASA config: ')
